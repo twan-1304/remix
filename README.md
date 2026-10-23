@@ -1,58 +1,32 @@
-# Image Crucible V0.7.4
+# ReMix
 
-Image Crucible handles images and videos entirely in the browser.
+A free, local browser workspace for images and videos: resize, compress, convert,
+restore, upscale, cut clips, and export individual files or ZIP archives.
+Media stays on your device. No account, API key, Node server or database is needed.
 
-## Video Forge
+This repository contains the ready-to-serve release. `index.html`, scripts,
+`ai/`, `icons/`, and `assets/` belong together at the publishing root.
 
-- Imports MP4, MOV, WebM, MKV, AVI, MPEG, MTS/M2TS, 3GP and OGV when the browser can read their metadata.
-- Imports supported videos from ZIP archives in the Videos tab. ZIPs receive the same local preflight, integrity checks, duplicate detection and RAM-protected one-at-a-time processing as image archives.
-- Extracted ZIP videos are staged in private browser storage when available instead of being expanded into RAM. A duration-recovery pass also handles streamed MP4/WebM files whose first metadata event reports an infinite duration.
-- Exports MP4, MOV and WebM.
-- H.264 encoding for MP4/MOV, VP8 and VP9 for WebM.
-- Visual-quality (CRF) and explicit bitrate modes.
-- Maximum resolution, frame-rate, encoding-speed and audio controls.
-- Non-destructive start/end trimming and multiple internal cuts.
-- A rebuilt responsive editor keeps the preview and timeline controls separated, explains trimming as a two-step workflow, and shows the final duration live.
-- Timeline seeking, visible kept/removed regions, reversible cut cards, cut-in-progress guidance and keyboard controls make precise edits easier.
-- Direct folder saving, individual downloads, batch ZIP export and CSV reports.
+## AI upscaling
 
-### Which output to pick
+AI 2× and AI 4× run the shipped UpscalerJS ESRGAN Medium 1.0.0 models through
+TensorFlow.js 4.11's WASM backend. These are separate native 2× and 4× models;
+processing is tiled and performed locally. Model weights and WASM are loaded
+on demand from the same site, relative to `ai-upscale.js`.
 
-**MP4 / H.264 is the recommended path.** It runs on the FFmpeg WebAssembly engine inside a module Worker, so it is unaffected by tab focus, window visibility or screen sleep. Conversion is slower than real time - the engine is a single-threaded build - but it finishes unattended.
+The same files support `/image-crucible/`, `/remix/`, and a domain root without
+editing paths. Output is limited to 20 megapixels. AI may alter fine details;
+video codec availability depends on the browser and operating system.
 
-**WebM / VP8 or VP9 is real-time only.** It bypasses ffmpeg.wasm's libvpx encoders entirely: Chrome or Edge records the resized canvas and captured source audio through its native VP8/Opus or VP9/Opus MediaRecorder. Encoding runs at roughly 1x, so a 30-second clip takes about 30 seconds, but the pipeline plays the source through a hidden video element and captures the canvas, which makes it sensitive to anything that interrupts playback:
+## Deployment
 
-- The tab must stay visible. Chrome clamps background timers to one per second, which would otherwise reduce the output to a slideshow. Recording pauses automatically when the tab is hidden and resumes when it returns, so the result stays correct - the job simply takes longer.
-- A screen wake lock is requested for the duration of the recording where the browser supports it.
-- If the effective frame rate still falls below 60% of the target, the job completes but reports the measured rate as a warning. Check that output before sending it out.
-- Keeping audio routes the source through Web Audio, which drives the playback clock. The graph is built after the source has loaded, and a suspended audio context is reported as a named error rather than a silent freeze. Selecting **Remove audio** takes Web Audio out of the path entirely.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the existing GitHub Pages setup, Cloudflare
+Pages settings, cache migration, smoke checks, and rollback instructions.
 
-VP9 quality mode targets roughly 28% less bitrate than VP8 for comparable output. If results look softer than expected, use bitrate mode instead.
+Keep `service-worker.js`: it retires the old Image Crucible caches and unregisters
+itself. ReMix does not install a replacement caching worker or promise offline
+startup. The manifest retains the relative application identity and updates its
+name and icons; installed shortcuts may refresh on the browser/OS's own schedule.
 
-### Known limitations
-
-- VP9 through ffmpeg.wasm is not available. The `libvpx-vp9` encoder is present in `@ffmpeg/core@0.12.10` but traps with `RuntimeError: memory access out of bounds` on the first frame, including with `-lag-in-frames 0 -auto-alt-ref 0`, which rules out lookahead-buffer exhaustion. The encoder branch remains in the source, dormant, pending an upstream fix. Until then, background-safe encoding means MP4/H.264.
-- Import is gated on the browser decoding the source. Containers Chrome cannot read natively - MKV, AVI, MPEG-TS/MTS, ProRes MOV, and often H.265 in MP4 - fail as **Unreadable video** before any encoding starts, and "Convert all" skips failed jobs. Remux to MP4/H.264 first.
-- WebM files produced by the native recorder carry Chrome's `alpha_mode=1` track tag despite being 4:2:0 without alpha. Some editors and older players treat this as an alpha channel. Prefer MP4 for footage headed into an NLE.
-- 4K sources are slow. The FFmpeg engine is single-threaded, so encode time scales with output pixels: expect roughly 10-15x real time for a 2160p output and 4-6x for a 1080p output. Cap max resolution at 1920x1080 unless you specifically need 4K out.
-- The browser build uses a 1.5 GB per-video safety ceiling. Source files are mounted read-only through WORKERFS rather than copied into WebAssembly memory, so only the output and the encoder's working set occupy the heap; browsers that reject the mount fall back to loading the whole source into memory.
-
-MP4 and MOV download the FFmpeg WebAssembly engine from jsDelivr on their first conversion and cache it in the service worker when served over HTTP. Until that first successful download completes, the MP4 path needs network access. The standalone HTML also works when opened directly through `file://`, where no service worker registers and nothing is cached between runs; its small worker modules are fetched and assembled into one local Blob worker so browsers never need to construct a cross-origin Worker. The module Worker loads the matching ESM core build. WASM memory crashes automatically discard the damaged FFmpeg engine before the next MP4/MOV conversion. Source media is never uploaded.
-
-## Planned
-
-WebCodecs (`VideoEncoder` / `VideoDecoder`) as the primary engine, with ffmpeg.wasm retained as a fallback demuxer for containers the browser cannot read. That removes the CDN dependency, lifts the memory ceiling, uses hardware encoding where available, and makes background-safe VP9 possible.
-
-## Deploy
-
-Publish these runtime files together:
-
-- `image-crucible-v0.7.4.html` (or rename it to `index.html`)
-- `service-worker.js`
-- `manifest.webmanifest`
-- `icons/icon.svg`
-- `icons/icon-192.png`
-- `icons/icon-512.png`
-- `THIRD_PARTY_NOTICES.md`
-
-Serve them over HTTPS or localhost so the PWA and direct folder export features can work.
+Third-party licenses are preserved in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+and under `ai/`. This release does not ship Image Crucible's old FFmpeg CDN runtime.

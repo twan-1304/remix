@@ -1,0 +1,7 @@
+{
+  // Cloudflare Pages configuration for the ready-to-serve repository root.
+  "name": "remix",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-10-23",
+  "send_metrics": false
+}

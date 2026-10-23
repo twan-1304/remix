@@ -1,31 +1,16 @@
 {
-  "name": "Image Crucible",
-  "short_name": "Crucible",
+  "name": "ReMix",
+  "short_name": "ReMix",
   "id": "./",
-  "description": "Private, local image and video compression, conversion and editing.",
+  "description": "Local image and video editing, conversion and AI upscaling.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#080c11",
-  "theme_color": "#10161e",
+  "background_color": "#111117",
+  "theme_color": "#111117",
   "icons": [
-    {
-      "src": "./icons/icon-192.png?v=0.7.4",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icons/icon-512.png?v=0.7.4",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icons/icon.svg?v=0.7.4",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "./icons/remix-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/remix-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/remix-default.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
