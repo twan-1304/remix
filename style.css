@@ -371,3 +371,5 @@ body.tour-active #toast{z-index:950}
 .workspace-empty>.remix-mark{width:80px;height:80px}
 .filter-bar{flex-wrap:wrap;row-gap:5px;min-width:0}
 @media(max-width:790px){.brand .remix-mark{width:30px;height:30px}}
+.install-app-button[hidden]{display:none!important}
+@media(max-width:790px){.topbar:has(.install-app-button:not([hidden])) .memory-meter{display:none}}

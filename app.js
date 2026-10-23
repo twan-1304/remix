@@ -6,6 +6,7 @@ import {bindImageViewer} from './image-viewer.js';
 import {loadPreferences,savePreferences,normalizePreferences,defaultPreferences,applyAppearance,effectiveImageConfig} from './preferences.js';
 import {createWorkspaceSettings} from './workspace-settings.js';
 import {petalScene} from './petals.js';
+import {createAppInstaller,installInstructions} from './pwa-install.js';
 'use strict';
 const $=s=>document.querySelector(s);
 const icons={
@@ -70,6 +71,18 @@ let imageViewer=null;
 let toastTimer,dialogReturnFocus,presetDraft=null,queueMode='ready',activeTask=null,activeJobId=null,importTask=null,importBusy=false,singleTask=null,singleJob=null;
 const results=new Map();
 const batchDownloads=createBatchDownloads({task,removeTemp,uniqueOutputNames,getItems:readyBatchOutputs,queueCount:()=>state.queue.length,isProcessing:()=>!!(activeTask||singleTask||importBusy),memoryBudget:()=>outputMemoryBudget(),openDialog,icon,bytesText:value=>bytesText(value)});
+const appInstaller=createAppInstaller({onChange:syncInstallButton,onUnavailable:openInstallInstructions,onInstalled:()=>toast('ReMix installed. Open it from your apps.')});
+function installButton(){
+ const {visible,busy}=appInstaller.state();
+ return `<button class="btn quiet install-app-button" data-action="install-app" aria-label="Install ReMix app" title="Install ReMix app" ${visible?'':'hidden'} ${busy?'disabled':''}>${icon('download')}<span>Install app</span></button>`;
+}
+function syncInstallButton({visible,busy}){
+ const button=$('.install-app-button');if(!button)return;
+ button.hidden=!visible;button.disabled=busy;
+}
+function openInstallInstructions(){
+ openDialog('Install ReMix',`<p>Keep ReMix in your apps and open it in its own window. Your media is still processed on this device.</p><p>${esc(installInstructions())}</p><p>Already installed? Open ReMix from your apps. Installation options depend on your browser.</p>`,`<button class="btn primary" data-dialog="close">Got it</button>`);
+}
 let memoryMonitor=null;
 function syncMemoryMonitor(){
  if(feature('memory')&&!memoryMonitor)memoryMonitor=createMemoryMonitor({subscribeWorkers:subscribeEngineMemory,onChange:updateMemoryReadout});
@@ -110,7 +123,7 @@ function render(){
  const sameFile=$('.app-shell')?.dataset.activeFile===String(current()?.id);
  const item=current(),s=effectiveSettings(item);
  $('#app').innerHTML=`<div data-active-file="${item?.id||''}" class="app-shell ${state.queue.length?'has-render-queue':''}">
- <header class="topbar"><div class="brand">${logo}<span>ReMix</span></div><span class="top-divider"></span><span class="workspace-title">Media workspace</span><div class="top-spacer"></div>${memoryButton()}<button class="preview-badge" data-action="about">${icon('info')}Engine beta</button><button class="icon-btn topbar-help" data-action="about" aria-label="Help and tutorial" title="Help and tutorial">${icon('help')}</button><button class="icon-btn theme-button" data-action="theme" aria-label="Choose theme" title="Choose theme">${icon('sun')}</button><button class="icon-btn workspace-settings-button" data-action="settings" aria-label="Workspace settings" title="Workspace settings">${icon('settings')}</button><button class="btn primary" data-action="import" aria-label="Add media">${icon('plus')}<span>Add media</span></button></header>
+ <header class="topbar"><div class="brand">${logo}<span>ReMix</span></div><span class="top-divider"></span><span class="workspace-title">Media workspace</span><div class="top-spacer"></div>${memoryButton()}<button class="preview-badge" data-action="about">${icon('info')}Engine beta</button>${installButton()}<button class="icon-btn topbar-help" data-action="about" aria-label="Help and tutorial" title="Help and tutorial">${icon('help')}</button><button class="icon-btn theme-button" data-action="theme" aria-label="Choose theme" title="Choose theme">${icon('sun')}</button><button class="icon-btn workspace-settings-button" data-action="settings" aria-label="Workspace settings" title="Workspace settings">${icon('settings')}</button><button class="btn primary" data-action="import" aria-label="Add media">${icon('plus')}<span>Add media</span></button></header>
  <nav class="mobile-tabs" aria-label="Workspace panels">${[['media','Media'],['edit','Preview'],['settings','Inspector']].map(([id,label])=>`<button class="${state.mobile===id?'active':''}" data-mobile="${id}">${label}</button>`).join('')}</nav>
  <main class="main" data-mobile="${state.mobile}">
  <nav class="rail" aria-label="Main navigation"><button class="rail-item active" data-action="media" aria-label="Media workspace">${icon('media')}<span>Media</span></button><button class="rail-item" data-action="presets">${icon('sliders')}<span>Presets</span></button><button class="rail-item" data-action="queue">${icon('layers')}<span>Queue</span></button><div class="rail-spacer"></div><button class="rail-item" data-action="settings">${icon('settings')}<span>Settings</span></button><button class="rail-item" data-action="about">${icon('help')}<span>Help</span></button></nav>
@@ -390,6 +403,7 @@ function applyPreset(id){
  render();toast(p[1]+' applied to '+m.name);
 }
 function action(name){const m=current();switch(name){
+ case'install-app':void appInstaller.install();break;
  case'import':openImport();break;
  case'restore-original':if(m?.kind==='image'){Object.assign(settings(m),{width:m.width,height:m.height,resize:true,lock:true,noUpscale:true,aiScale:'off',format:'PNG',compressionMode:'quality',sharpen:false,preset:'custom'});render();toast('Original dimensions and lossless PNG selected.');}break;
  case'about':openAbout();break;
