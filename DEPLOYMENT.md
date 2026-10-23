@@ -1,8 +1,10 @@
 # Switching Image Crucible to ReMix
 
-This is a prepared replacement for the files currently served by
-`twan-1304/image-crucible`. Preparing or opening a draft PR does not deploy it.
-The current publishing setup serves the repository root on GitHub Pages.
+The production ReMix repository is `twan-1304/remix`, served from its root on
+GitHub Pages at `https://twan-1304.github.io/remix/`.
+`twan-1304/image-crucible` is now a small compatibility repository that restores
+the old launch address for existing installed apps. Application development and
+Git remotes must use the `remix` repository.
 
 ## GitHub Pages
 
@@ -18,9 +20,13 @@ folder. `.nojekyll` prevents Jekyll processing. No package installation, Node
 runtime, secrets or database are required. Keep the complete `ai/` directory,
 including both sets of model weights, all WASM variants and licenses.
 
-A repository rename is optional and separate. Asset paths follow the deployed
-module location, including `/remix/`. A changed URL also changes browser storage
-and installed-shortcut behavior; do not assume the old Pages URL redirects.
+Asset paths follow the deployed module location, including `/remix/`. GitHub
+does not redirect Pages URLs after repository renames. The compatibility site
+therefore serves ReMix at `/image-crucible/` while installed apps pick up their
+updated manifest. Reusing the old repository name also ends GitHub repository
+redirects: existing Git remotes must use `https://github.com/twan-1304/remix.git`.
+Browser storage is origin-based; moving to another hostname requires a separate
+plan for installations, preferences, and caches.
 
 GitHub Pages does not interpret the Cloudflare `_headers` file. The document's
 meta CSP remains active, but it does not provide the full HTTP response policy
@@ -38,7 +44,7 @@ For Git integration:
 
 | Setting | Value |
 | --- | --- |
-| Repository | `twan-1304/image-crucible` (or its renamed successor) |
+| Repository | `twan-1304/remix` |
 | Production branch | `main` |
 | Framework preset | None |
 | Build command | `exit 0` |
@@ -67,9 +73,20 @@ unrelated service workers, ReMix's AI model cache, presets or local preferences.
 There is no forced reload or navigation of an open editor. Existing media already
 in an Image Crucible tab should be saved before manually reloading that tab.
 
-The manifest keeps `id`, `scope` and `start_url` relative to this directory, with
-ReMix's name and icons. Browser/OS updates of installed app labels and icons may
-be delayed. This release does not provide an offline app-shell cache.
+The manifest uses `id: "./"`, which resolves against the start URL's origin,
+not its directory. On GitHub Pages the preserved installed identity is
+`https://twan-1304.github.io/`. The compatibility manifest explicitly keeps
+`id: "/"` and changes `start_url` and `scope` to `/remix/`. Both its original
+manifest URL (including `?v=0.7.4`) and the old service worker URL are served by
+the compatibility repository. Its page displays ReMix using the runtime at
+`/remix/`, without a forced reload or redirect.
+
+Keep **both** GitHub Pages deployments available for returning users during a
+future Cloudflare move. Do not disable `/remix/`: the compatibility page loads
+its runtime files from there. A different hostname is a separate app-origin
+migration, not covered by this bridge. Browser/OS updates of installed app names
+and icons may require user review. This release does not provide an offline
+app-shell cache.
 
 ## Verify the deployed URL
 
