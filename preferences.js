@@ -1,3 +1,4 @@
+import {defaultNaming,normalizeNaming} from './output-names.js';
 // Workspace preferences never contain source media, output blobs or job state.
 export const PREFERENCES_KEY = 'remix-workspace-preferences-v1';
 export const THEMES = [
@@ -26,11 +27,11 @@ export const FEATURES = [
   {id:'finishing',group:'Image tools',name:'Finishing touches',description:'Make sharpening and metadata preservation available for new exports.'},
   {id:'tutorialPrompt',group:'Guidance',name:'Welcome tour prompt',description:'Offer the tour to a new workspace. You can always start it from Help.'},
 ];
-export function defaultPreferences(){return {version:1,theme:'dark',effects:true,reducedMotion:false,features:Object.fromEntries(FEATURES.map(f=>[f.id,f.id!=='engineBadge']))};}
+export function defaultPreferences(){return {version:1,naming:defaultNaming(),theme:'dark',effects:true,reducedMotion:false,features:Object.fromEntries(FEATURES.map(f=>[f.id,f.id!=='engineBadge']))};}
 export function validTheme(theme){return theme==='system'||THEMES.some(t=>t.id===theme);}
 export function normalizePreferences(value,legacyTheme='dark'){
   const defaults=defaultPreferences(),source=value&&typeof value==='object'?value:{};
-  return {...defaults,theme:validTheme(source.theme)?source.theme:validTheme(legacyTheme)?legacyTheme:'dark',
+  return {...defaults,naming:normalizeNaming(source.naming),theme:validTheme(source.theme)?source.theme:validTheme(legacyTheme)?legacyTheme:'dark',
     effects:typeof source.effects==='boolean'?source.effects:defaults.effects,
     reducedMotion:typeof source.reducedMotion==='boolean'?source.reducedMotion:defaults.reducedMotion,
     features:Object.fromEntries(FEATURES.map(({id})=>[id,typeof source.features?.[id]==='boolean'?source.features[id]:defaults.features[id]]))};
