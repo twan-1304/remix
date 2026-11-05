@@ -373,3 +373,17 @@ body.tour-active #toast{z-index:950}
 @media(max-width:790px){.brand .remix-mark{width:30px;height:30px}}
 .install-app-button[hidden]{display:none!important}
 @media(max-width:790px){.topbar:has(.install-app-button:not([hidden])) .memory-meter{display:none}}
+
+/* Output naming uses the same plan for previews, downloads and ZIP entries. */
+.output-filename{display:block;overflow-wrap:anywhere;white-space:normal;color:var(--accent);font-size:12px;font-weight:500}
+.naming-field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;min-width:0;font-size:13px;color:var(--muted)}
+.naming-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.naming-grid[hidden]{display:none}
+.naming-check{display:flex;align-items:center;gap:9px;font-size:13px;margin:4px 0 18px}.naming-check input{accent-color:var(--accent)}
+.naming-preview-row{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.naming-preview-row span{display:block;color:var(--muted);font-size:12px}.naming-preview-row strong{display:block;margin-top:5px;font-size:13px;font-weight:500;color:var(--accent)}
+#naming-preview{max-height:240px;overflow:auto;margin-bottom:16px}
+#naming-save-status{font-size:12px;margin:0}
+@media(max-width:430px){.naming-grid{grid-template-columns:1fr;gap:0}.dialog-footer:has(#naming-reset){flex-wrap:wrap}.queue-row:has([data-rename-output]){flex-wrap:wrap}.queue-row:has([data-rename-output]) .queue-info{flex-basis:calc(100% - 70px)}}
+dialog.output-naming-dialog[open]{display:flex;flex-direction:column}
+.output-naming-dialog .dialog-head,.output-naming-dialog .dialog-footer{flex-shrink:0}
+.output-naming-dialog .dialog-body{overflow:auto;min-height:0}
